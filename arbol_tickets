@@ -1,0 +1,74 @@
+from queue import PriorityQueue
+from graphviz import Digraph
+
+class Ticket:
+    def __init__(self, ID, prioridad, area):
+        self.ID = ID
+        self.prioridad = prioridad
+        self.area = area
+
+    def __lt__(self, other):
+        prioridad_map = {'Alta': 1, 'Media': 2, 'Baja': 3}
+        return prioridad_map[self.prioridad] < prioridad_map[other.prioridad]
+
+    def __repr__(self):
+        return f'{self.ID} ({self.prioridad}, {self.area})'
+
+tickets = [
+    Ticket('T001', 'Alta', 'Seguridad'),
+    Ticket('T002', 'Media', 'Desarrollo'),
+    Ticket('T003', 'Alta', 'Infraestructura'),
+    Ticket('T004', 'Baja', 'Atención'),
+    Ticket('T005', 'Media', 'Infraestructura'),
+    Ticket('T006', 'Alta', 'Desarrollo'),
+    Ticket('T007', 'Baja', 'Recursos Humanos'),
+    Ticket('T008', 'Media', 'Seguridad'),
+    Ticket('T009', 'Alta', 'Operaciones'),
+    Ticket('T010', 'Media', 'Atención'),
+    Ticket('T011', 'Baja', 'Infraestructura'),
+    Ticket('T012', 'Alta', 'Desarrollo'),
+    Ticket('T013', 'Media', 'Operaciones'),
+    Ticket('T014', 'Baja', 'Atención'),
+    Ticket('T015', 'Alta', 'Infraestructura'),
+    Ticket('T016', 'Media', 'Recursos Humanos'),
+    Ticket('T017', 'Alta', 'Seguridad'),
+    Ticket('T018', 'Baja', 'Operaciones'),
+    Ticket('T019', 'Media', 'Desarrollo'),
+    Ticket('T020', 'Alta', 'Atención'),
+]
+
+arbol = {}
+for ticket in tickets:
+    if ticket.prioridad not in arbol:
+        arbol[ticket.prioridad] = {}
+    if ticket.area not in arbol[ticket.prioridad]:
+        arbol[ticket.prioridad][ticket.area] = []
+    arbol[ticket.prioridad][ticket.area].append(ticket)
+
+cola_prioridad = PriorityQueue()
+for ticket in tickets:
+    cola_prioridad.put(ticket)
+
+dot = Digraph(comment='Árbol de Tickets')
+dot.node('Root', 'Tickets')
+for prioridad in arbol:
+    dot.node(prioridad)
+    dot.edge('Root', prioridad)
+    for area in arbol[prioridad]:
+        nodo_area = f'{prioridad}_{area}'
+        dot.node(nodo_area, area)
+        dot.edge(prioridad, nodo_area)
+        for ticket in arbol[prioridad][area]:
+            dot.node(ticket.ID, ticket.ID)
+            dot.edge(nodo_area, ticket.ID)
+
+dot.render('arbol_tickets', format='png', cleanup=True)
+dot.save('arbol_tickets.json')
+
+orden_atencion = []
+while not cola_prioridad.empty():
+    orden_atencion.append(str(cola_prioridad.get()))
+
+print('Orden de atención por prioridad:')
+for t in orden_atencion:
+    print(t)
